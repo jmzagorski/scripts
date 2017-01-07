@@ -22,7 +22,9 @@ clrProxy() {
 # forbidden
 # curl -s --head $proxy_value --connect-timeout 5 | head -n 1 | grep "HTTP/1.[01] [23].." > /dev/null
 
-ping -q -c 1 -W 4 $proxy_value > /dev/null
+echo "looking for proxy $PROXY_WORK at port $PROXY_PORT_WORK"
+
+ping -q -c 1 -W 4 $PROXY_WORK > /dev/null
 
 # on success export variables
 if [ "$?" = "0" ]; then
@@ -34,6 +36,7 @@ if [ "$?" = "0" ]; then
 else
   echo "proxy not found unsetting environment"
   clrProxy
+  /usr/bin/git config --global --unset http.proxy
 fi
 
 echo "done"
