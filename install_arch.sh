@@ -25,6 +25,7 @@
 # add NetworkManager.service to first systemctl enable if desired
 # sudo mkdir ~/livecd/airootfs/etc/skel # for any file transfers
 # after install enable and start vboxservice.start for guest services
+# after install enable and start systemd-netowrkd.service.start for guest services
 # sudo mkdir airootfs/etc/sudoers.d # to prevent password on sudo
 #  sudo vim airootfs/etc/sudoers.d/g_wheel
 #  %wheel ALL=(ALL) NOPASSW: ALL
