@@ -28,7 +28,7 @@
 # after install enable and start systemd-netowrkd.service.start for guest services
 # sudo mkdir airootfs/etc/sudoers.d # to prevent password on sudo
 #  sudo vim airootfs/etc/sudoers.d/g_wheel
-#  %wheel ALL=(ALL) NOPASSW: ALL
+#  %wheel ALL=(ALL) NOPASSWD:ALL
 
 encrypt=
 swap=
