@@ -7,7 +7,10 @@
 Param(
     [Parameter(Mandatory=$true,Position=0)]
     [string]
-    $FilePath=30
+    $FilePath=30,
+
+    [switch]
+    $Remove
     )
 
 Function New-PrintObject ($Path) {
@@ -20,23 +23,44 @@ Function New-PrintObject ($Path) {
 }
 
 $printDoc = {
-    Param ([String] $File, [String] $Printer)
+    Param ([String] $File, [String] $Printer, [bool] $RemoveFileOnSuccess)
 
     $logName = "$(Split-Path $File)\$((Get-Item $File).BaseName)"
     $stdErrLog = "$logName.err"
     $stdOutLog = "$lofName.log"
-    $proc = Start-Process -FilePath $File -Verb Printto -PassThru -ArgumentList $Printer
-    $timeouted = $null
-    $proc | Wait-Process -Timeout 60 -ErrorAction SilentlyContinue -ErrorVariable timeouted
+    try
+    {
+        $proc = Start-Process -FilePath $File -Verb Printto -PassThru -ArgumentList $Printer
+        $timeouted = $null
+        Write-Host $Remove
+        $proc | Wait-Process -Timeout 60 -ErrorAction SilentlyContinue -ErrorVariable timeouted
 
-    if ($timeouted)
-    {
-      # terminate the process
-      $proc | Stop-Process
+        if ($timeouted)
+        {
+          # terminate the process
+          $proc | Stop-Process
+        }
+
+        if ($proc.ExitCode -ne 0)
+        {
+          "Exit code was: $($proc.ExitCode)" | Out-File $stdErrLog
+        }
+        elseif ($RemoveFileOnSuccess)
+        {
+          try
+          {
+
+            Remove-Item -Path $File
+          }
+          catch
+          {
+            $_ | Out-File $stdErrLog
+          }
+        }
     }
-    elseif ($proc.ExitCode -ne 0)
+    catch
     {
-      "Exit code was: $($proc.ExitCode)" | Out-File $stdErrLog
+        $_ | Out-File $stdErrLog
     }
 }
 
@@ -55,9 +79,9 @@ foreach($printObj in $printObjs)
 {
   $targetPrinter = '"\\{0}\{1}"' -f $printObj.Server,$printObj.Printer
 
-  $jobs += Start-Job -Name "Printing $($printObj.File)" -ScriptBlock $printDoc -ArgumentList $printObj.File, $targetPrinter
+  $jobs += Start-Job -Name "Printing $($printObj.File)" -ScriptBlock $printDoc -ArgumentList $printObj.File, $targetPrinter, $Remove
 }
 
 if ($jobs.length) {
-  Wait-Job -Job $jobs | Receive-Job
+  Wait-Job -Job $jobs | Remove-Job
 }
